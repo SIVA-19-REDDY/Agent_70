@@ -23,8 +23,14 @@ app.use('/api/ai', aiRoutes);
 app.use('/api', academicRoutes);
 app.use('/api', decisionRoutes);
 
+// Direct root aliases
+app.use('/auth', authRoutes);
+app.use('/ai', aiRoutes);
+app.use('/', academicRoutes);
+app.use('/', decisionRoutes);
+
 // Health Check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'Operational',
     system: 'Agent 70 - Academic Decision Support Agent (AURA)',

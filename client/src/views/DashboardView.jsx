@@ -70,7 +70,7 @@ export function DashboardView() {
               Executive Briefing • {filters.department === 'all' ? 'Institutional' : filters.department}
             </span>
             <span className="text-slate-300">•</span>
-            <span className="text-xs font-medium text-slate-500">Live Telemetry Synchronized</span>
+            <span className="text-xs font-medium text-slate-500">Live Pipeline Active</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             Academic Decision Overview

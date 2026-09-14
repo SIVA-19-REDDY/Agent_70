@@ -19,30 +19,42 @@ export function EvidenceDrawer() {
   const [ingestSuccess, setIngestSuccess] = useState(false);
   const [jsonError, setJsonError] = useState(null);
 
+  const [subAgentDetail, setSubAgentDetail] = useState(null);
+
   // Extract agent ID
   const agentId = activeEvidence?.agentId || activeEvidence?.id || (activeEvidence?.agent && activeEvidence.agent.id);
 
   // Fetch full agent spec and live packets whenever drawer opens or agentId changes
   useEffect(() => {
     if (isDrawerOpen && agentId) {
+      if (activeEvidence?.subAgent) {
+        setSubAgentDetail(activeEvidence.subAgent);
+      }
       loadAgentData(agentId);
     } else if (isDrawerOpen && activeEvidence) {
       // Fallback if generic evidence object
       setAgentDetail(null);
+      setSubAgentDetail(activeEvidence?.subAgent || null);
       setAnalysisResult(null);
     }
-  }, [isDrawerOpen, agentId]);
+  }, [isDrawerOpen, agentId, activeEvidence]);
 
   const loadAgentData = async (id) => {
     setLoadingAgent(true);
     try {
-      const res = await api.getAgentDetail(id);
-      if (res && res.agent) {
-        setAgentDetail(res.agent);
-        if (res.agent.sample_inputs && res.agent.sample_inputs.length > 0) {
+      const [res, subRes] = await Promise.allSettled([
+        api.getAgentDetail(id),
+        api.getSubAgentDetail(id)
+      ]);
+      if (res.status === 'fulfilled' && res.value?.agent) {
+        setAgentDetail(res.value.agent);
+        if (res.value.agent.sample_inputs && res.value.agent.sample_inputs.length > 0) {
           setSelectedSampleIdx(0);
-          setJsonPayloadText(JSON.stringify(res.agent.sample_inputs[0].payload, null, 2));
+          setJsonPayloadText(JSON.stringify(res.value.agent.sample_inputs[0].payload, null, 2));
         }
+      }
+      if (subRes.status === 'fulfilled' && subRes.value?.subAgent) {
+        setSubAgentDetail(subRes.value.subAgent);
       }
     } catch (err) {
       console.warn('Could not fetch full agent spec:', err);
@@ -270,16 +282,83 @@ export function EvidenceDrawer() {
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-emerald-900 text-xs">Autonomous Telemetry Feed Active</h4>
+                      <h4 className="font-bold text-emerald-900 text-xs">
+                        {subAgentDetail ? `Sub-Agent ${subAgentDetail.agentId || agentId}: Execution Completed` : 'Autonomous Telemetry Feed Active'}
+                      </h4>
                       <p className="text-xs text-emerald-700 mt-0.5">
-                        Continuous ingestion across institutional ERP, LMS, Biometric, and Examination logs.
+                        {subAgentDetail ? `${subAgentDetail.recordsAnalyzed || 100} student records processed directly from academicDataset100.json.` : 'Continuous ingestion across institutional ERP, LMS, Biometric, and Examination logs.'}
                       </p>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-800 border border-emerald-300">
-                    Sync Normal
+                    {subAgentDetail ? 'Status: Completed' : 'Sync Normal'}
                   </span>
                 </div>
+
+                {/* Sub-Agent Execution Output Card (Real Pipeline Data) */}
+                {subAgentDetail && (
+                  <div className="border border-blue-200 bg-white rounded-2xl p-5 space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-blue-600" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                          Agent {subAgentDetail.agentId} Structured Output (Real Pipeline)
+                        </h4>
+                      </div>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        {subAgentDetail.recordsAnalyzed || 100} Records Analyzed
+                      </span>
+                    </div>
+
+                    {subAgentDetail.findings?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
+                          Calculated Findings ({subAgentDetail.findings.length})
+                        </span>
+                        <div className="space-y-1">
+                          {subAgentDetail.findings.map((f, i) => (
+                            <div key={i} className="text-xs text-slate-700 font-medium flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                              <span className="text-blue-600 font-black shrink-0">•</span>
+                              <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {subAgentDetail.risks?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block">
+                          Identified Academic Risks ({subAgentDetail.risks.length})
+                        </span>
+                        <div className="space-y-1">
+                          {subAgentDetail.risks.map((r, i) => (
+                            <div key={i} className="text-xs text-amber-900 font-medium flex items-start gap-2 bg-amber-50/70 p-2.5 rounded-xl border border-amber-100">
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                              <span>{r}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {subAgentDetail.recommendations?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 block">
+                          Actionable Recommendations ({subAgentDetail.recommendations.length})
+                        </span>
+                        <div className="space-y-1">
+                          {subAgentDetail.recommendations.map((rec, i) => (
+                            <div key={i} className="text-xs text-emerald-900 font-medium flex items-start gap-2 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                              <span>{rec}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Main Metrics Card */}
                 <div className="border border-slate-200 rounded-2xl p-5 space-y-4 bg-slate-50/50">

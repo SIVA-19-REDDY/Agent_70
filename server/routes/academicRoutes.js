@@ -1,6 +1,5 @@
 import express from 'express';
 import { INSTITUTIONAL_DATA } from '../data/institutionalData.js';
-import { MOCK_AI_RESPONSES } from '../data/mockAIResponses.js';
 import { 
   getAllAgentSpecifications, 
   getAgentSpecification, 
@@ -335,58 +334,76 @@ router.get('/pipeline/execute', (req, res) => {
   try {
     const dataset = loadAcademicDataset();
     const pipelineResult = runSubAgentsPipeline(dataset);
-    const engine = new Agent70ReasoningEngine(pipelineResult.consolidated_evidence);
+    const engine = new Agent70ReasoningEngine(pipelineResult.subAgents);
     const agent70DecisionReport = engine.generateExecutiveDecisionSupport();
 
     res.json({
-      pipeline_status: 'SUCCESS',
+      success: true,
+      recordsAnalyzed: dataset.length,
       timestamp: new Date().toISOString(),
+      subAgents: pipelineResult.subAgents,
+      agent70: agent70DecisionReport,
+      // Backward compatibility aliases
+      pipeline_status: 'SUCCESS',
       dataset_records_processed: dataset.length,
       sub_agents_executed_count: pipelineResult.total_sub_agents_executed,
       sub_agent_evidence: pipelineResult.consolidated_evidence,
       agent_70_decision_intelligence: agent70DecisionReport
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, success: false });
   }
 });
 
 // Get individual or consolidated sub-agent outputs
 router.get('/pipeline/subagents', (req, res) => {
   try {
-    const pipelineResult = runSubAgentsPipeline();
+    const dataset = loadAcademicDataset();
+    const pipelineResult = runSubAgentsPipeline(dataset);
     res.json({
+      success: true,
+      total: pipelineResult.total_sub_agents_executed,
+      recordsAnalyzed: dataset.length,
+      subAgents: pipelineResult.subAgents,
+      // Backward compatibility aliases
       total_sub_agents: pipelineResult.total_sub_agents_executed,
       sub_agents: pipelineResult.consolidated_evidence
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, success: false });
   }
 });
 
 // Single sub-agent detailed report
 router.get('/pipeline/subagents/:id', (req, res) => {
   try {
-    const pipelineResult = runSubAgentsPipeline();
-    const agentData = pipelineResult.consolidated_evidence[req.params.id];
+    const dataset = loadAcademicDataset();
+    const pipelineResult = runSubAgentsPipeline(dataset);
+    const agentId = req.params.id.replace('agent_', 'agent').toLowerCase();
+    const agentData = pipelineResult.subAgents[agentId] || pipelineResult.consolidated_evidence[req.params.id];
     if (!agentData) {
-      return res.status(404).json({ error: `Sub-agent ${req.params.id} output not found in pipeline execution.` });
+      return res.status(404).json({ error: `Sub-agent ${req.params.id} output not found in pipeline execution.`, success: false });
     }
-    res.json({ sub_agent: agentData });
+    res.json({ success: true, subAgent: agentData, sub_agent: agentData });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, success: false });
   }
 });
 
 // Agent 70 Full Decision Support
 router.get('/agent70/decision-support', (req, res) => {
   try {
-    const pipelineResult = runSubAgentsPipeline();
-    const engine = new Agent70ReasoningEngine(pipelineResult.consolidated_evidence);
+    const dataset = loadAcademicDataset();
+    const pipelineResult = runSubAgentsPipeline(dataset);
+    const engine = new Agent70ReasoningEngine(pipelineResult.subAgents);
     const decisionSupport = engine.generateExecutiveDecisionSupport();
-    res.json(decisionSupport);
+    res.json({
+      success: true,
+      agent70: decisionSupport,
+      ...decisionSupport
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, success: false });
   }
 });
 

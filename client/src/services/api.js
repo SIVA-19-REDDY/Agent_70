@@ -3,7 +3,10 @@
  * Connects to Express backend on /api with intelligent error handling.
  */
 
-const BASE_URL = '/api';
+const envUrl = (import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://agent70-backend.onrender.com' : '')).replace(/\/+$/, '');
+const BASE_URL = envUrl 
+  ? (envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`) 
+  : '/api';
 
 export async function fetchApi(endpoint, options = {}) {
   try {
