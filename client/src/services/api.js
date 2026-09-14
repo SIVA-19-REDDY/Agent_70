@@ -29,6 +29,7 @@ export async function fetchApi(endpoint, options = {}) {
 
 export const api = {
   // Auth
+  register: (userData) => fetchApi('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
   login: (credentials) => fetchApi('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   getRoles: () => fetchApi('/auth/roles'),
 
@@ -55,6 +56,25 @@ export const api = {
   getFaculty: () => fetchApi('/faculty'),
   getOutcomes: () => fetchApi('/outcomes'),
 
-  // Evidence
-  getEvidence: () => fetchApi('/evidence')
+  // Evidence & Multi-Agent Telemetry (PDF Specification)
+  getEvidence: () => fetchApi('/evidence'),
+  getAgentDetail: (agentId) => fetchApi(`/evidence/agents/${agentId}`),
+  ingestAgentTelemetry: (agentId, payload, label) =>
+    fetchApi(`/evidence/${agentId}/telemetry`, {
+      method: 'POST',
+      body: JSON.stringify({ payload, label })
+    }),
+  resetEvidenceTelemetry: () => fetchApi('/evidence/reset', { method: 'POST' }),
+
+  // End-to-End 100-Entry Dataset & Sub-Agents Pipeline
+  getAcademicDataset: () => fetchApi('/pipeline/dataset'),
+  executePipeline: () => fetchApi('/pipeline/execute'),
+  getSubAgents: () => fetchApi('/pipeline/subagents'),
+  getSubAgentDetail: (id) => fetchApi(`/pipeline/subagents/${id}`),
+  getAgent70DecisionSupport: () => fetchApi('/agent70/decision-support'),
+  askAgent70DrillDown: (question) =>
+    fetchApi('/agent70/query', {
+      method: 'POST',
+      body: JSON.stringify({ question })
+    })
 };

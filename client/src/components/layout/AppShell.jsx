@@ -3,14 +3,12 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Shield, Sparkles } from 'lucide-react';
 import { InstitutionalOfficialHeader } from './InstitutionalOfficialHeader';
 import { Sidebar } from './Sidebar';
-import { RealtimeInstitutionalBar } from './RealtimeInstitutionalBar';
-import { InstitutionalAccessModal } from './InstitutionalAccessModal';
 import { DecisionModal } from '../common/DecisionModal';
+import { EvidenceDrawer } from '../common/EvidenceDrawer';
 import { AIRobotAvatar } from '../ai/AIRobotAvatar';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function AppShell() {
-  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { user } = useAuth();
   const location = useLocation();
@@ -66,21 +64,15 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col text-slate-800 font-sans">
-      {/* 1. Official Institutional Header (Fixed Top - Matching Reference Image) */}
+      {/* 1. Official Institutional Header (Fixed Top) */}
       <InstitutionalOfficialHeader />
 
-      {/* 2. Real-time Telemetry Bar (Fixed / Sticky directly below official header) */}
-      <div className="sticky top-[61px] z-40 bg-slate-900 shadow-sm">
-        <RealtimeInstitutionalBar onSync={() => {}} />
-      </div>
-
-      {/* 3. Main Workspace Area */}
+      {/* 2. Main Workspace Area (Clean & simple without top status/telemetry bar) */}
       <div className="flex-1 flex min-w-0 bg-[#F8FAFC]">
         {/* Fixed Left Sidebar Navigation */}
         {isSidebarOpen && (
-          <div className="sticky top-[102px] h-[calc(100vh-102px)] shrink-0 z-30 bg-white">
+          <div className="sticky top-[105px] h-[calc(100vh-105px)] shrink-0 z-30 bg-white">
             <Sidebar 
-              onOpenAccessModal={() => setIsAccessModalOpen(true)} 
               onCollapse={() => setIsSidebarOpen(false)}
             />
           </div>
@@ -110,11 +102,8 @@ export function AppShell() {
       {/* Decision Recording Modal */}
       <DecisionModal />
 
-      {/* Security Clearance & Role Switcher Modal */}
-      <InstitutionalAccessModal
-        isOpen={isAccessModalOpen}
-        onClose={() => setIsAccessModalOpen(false)}
-      />
+      {/* Multi-Agent Telemetry & Evidence Verification Drawer */}
+      <EvidenceDrawer />
     </div>
   );
 }

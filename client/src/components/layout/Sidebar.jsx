@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { AIRobotAvatar } from '../ai/AIRobotAvatar';
 import { OfficialAgentEmblem } from '../common/OfficialAgentEmblem';
 
-export function Sidebar({ onOpenAccessModal, onCollapse }) {
+export function Sidebar({ onCollapse }) {
   const { user, logout, switchRole } = useAuth();
   const location = useLocation();
 
@@ -79,11 +79,10 @@ export function Sidebar({ onOpenAccessModal, onCollapse }) {
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* AI Robot Mascot & Status Indicator */}
+            {/* AI Robot Mascot */}
             <div 
-              onClick={onOpenAccessModal}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-50 border border-blue-200/80 shadow-xs cursor-pointer hover:bg-blue-100 transition-colors"
-              title="Institutional Clearance: Click to view access matrix"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-50 border border-blue-200/80 shadow-xs"
+              title="Agent 70 AI Intelligence Mascot"
             >
               <AIRobotAvatar size="xs" animate={true} />
             </div>
@@ -121,23 +120,19 @@ export function Sidebar({ onOpenAccessModal, onCollapse }) {
                   <span className="truncate">{item.label}</span>
                 </div>
 
-                {item.badge && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-blue-50 text-blue-700 border border-blue-100'
+                {item.count && (
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                   }`}>
-                    {item.badge}
+                    {item.count}
                   </span>
                 )}
 
-                {item.count && (
-                  <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                    isActive
-                      ? 'bg-white/25 text-white'
-                      : 'bg-slate-100 text-slate-600'
+                {item.badge && (
+                  <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-700 border border-blue-100'
                   }`}>
-                    {item.count}
+                    {item.badge}
                   </span>
                 )}
               </NavLink>
@@ -146,35 +141,29 @@ export function Sidebar({ onOpenAccessModal, onCollapse }) {
         </div>
       </div>
 
-      {/* Footer Profile & Scope Card (Pure White Theme) */}
+      {/* Sidebar Footer with Authority Clearance & Authenticated User Profile */}
       <div className="p-4 border-t border-slate-100 bg-slate-50/70 space-y-3">
         {/* Delegated Authority & Security Clearance Badge */}
-        <button
-          type="button"
-          onClick={onOpenAccessModal}
-          className="w-full bg-white rounded-2xl p-3 border border-slate-200 shadow-xs flex items-center justify-between text-left hover:border-blue-400 hover:shadow-sm transition-all cursor-pointer group"
-        >
+        <div className="w-full bg-white rounded-2xl p-3 border border-slate-200 shadow-xs flex items-center justify-between text-left">
           <div className="flex items-center gap-2.5 min-w-0">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <div className="min-w-0">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Access Clearance
               </span>
-              <span className="text-xs font-extrabold text-slate-800 block truncate group-hover:text-blue-600 transition-colors">
-                {isDean ? 'Level 5 (Institutional)' : 'Level 4 (Department)'}
+              <span className="text-xs font-extrabold text-slate-800 block truncate">
+                {user?.clearance ? (user.clearance.split('—')[0] || user.clearance) : (isDean ? 'Level 5 (Institutional)' : 'Level 4 (Department)')}
               </span>
             </div>
           </div>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-        </button>
+          <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+            Active
+          </span>
+        </div>
 
         {/* User Card with Real Portrait */}
         <div className="flex items-center justify-between gap-2 p-1">
-          <div 
-            onClick={onOpenAccessModal}
-            className="flex items-center gap-2.5 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-            title="Click to switch role or inspect authority"
-          >
+          <div className="flex items-center gap-2.5 overflow-hidden">
             <img
               src={user?.avatar || (isDean ? "/assets/dean_portrait.jpg" : "/assets/hod_portrait.jpg")}
               alt={user?.name}
